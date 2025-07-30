@@ -10,35 +10,35 @@ from userbot.helpers.constants import First
 from userbot.plugins.help import add_command_help
 
 
-@UserBot.on_message(filters.command("alive", ".") & filters.me)
+@UserBot.on_message(filters.command(["alive", "حي"], ".") & filters.me)
 async def alive(bot: UserBot, message: Message):
     txt = (
-        f"**{UserBot.__class__.__name__}** ```RUNNING```\n"
-        f"-> Current Uptime: `{str(datetime.now() - START_TIME).split('.')[0]}`\n"
-        f"-> Python: `{python_version()}`\n"
-        f"-> Pyrogram: `{__version__}`"
+        "**البوت يعمل**\n"
+        f"- مدة التشغيل: `{str(datetime.now() - START_TIME).split('.')[0]}`\n"
+        f"- إصدار Python: `{python_version()}`\n"
+        f"- إصدار Pyrogram: `{__version__}`"
     )
     await message.edit(txt)
 
 
-@UserBot.on_message(filters.command("repo", ".") & filters.me)
+@UserBot.on_message(filters.command(["repo", "المصدر"], ".") & filters.me)
 async def repo(bot: UserBot, message: Message):
     await message.edit(First.REPO)
 
 
-@UserBot.on_message(filters.command("creator", ".") & filters.me)
+@UserBot.on_message(filters.command(["creator", "المطور"], ".") & filters.me)
 async def creator(bot: UserBot, message: Message):
     await message.edit(First.CREATOR)
 
 
-@UserBot.on_message(filters.command(["uptime", "up"], ".") & filters.me)
+@UserBot.on_message(filters.command(["uptime", "up", "المدة"], ".") & filters.me)
 async def uptime(bot: UserBot, message: Message):
     await message.edit(
-        f"Current Uptime: `{str(datetime.now() - START_TIME).split('.')[0]}`\n"
+        f"مدة التشغيل الحالية: `{str(datetime.now() - START_TIME).split('.')[0]}`"
     )
 
 
-@UserBot.on_message(filters.command("id", ".") & filters.me)
+@UserBot.on_message(filters.command(["id", "ايدي"], ".") & filters.me)
 async def get_id(bot: UserBot, message: Message):
     file_id = None
     user_id = None
@@ -47,92 +47,69 @@ async def get_id(bot: UserBot, message: Message):
         rep = message.reply_to_message
 
         if rep.audio:
-            file_id = f"**File ID**: `{rep.audio.file_id}`"
-            file_id += "**File Type**: `audio`"
+            file_id = f"File ID: `{rep.audio.file_id}`\nالنوع: Audio"
 
         elif rep.document:
-            file_id = f"**File ID**: `{rep.document.file_id}`"
-            file_id += f"**File Type**: `{rep.document.mime_type}`"
+            file_id = f"File ID: `{rep.document.file_id}`\nالنوع: `{rep.document.mime_type}`"
 
         elif rep.photo:
-            file_id = f"**File ID**: `{rep.photo.file_id}`"
-            file_id += "**File Type**: `photo`"
+            file_id = f"File ID: `{rep.photo.file_id}`\nالنوع: Photo"
 
         elif rep.sticker:
-            file_id = f"**Sicker ID**: `{rep.sticker.file_id}`\n"
+            file_id = f"Sticker ID: `{rep.sticker.file_id}`\n"
             if rep.sticker.set_name and rep.sticker.emoji:
-                file_id += f"**Sticker Set**: `{rep.sticker.set_name}`\n"
-                file_id += f"**Sticker Emoji**: `{rep.sticker.emoji}`\n"
-                if rep.sticker.is_animated:
-                    file_id += f"**Animated Sticker**: `{rep.sticker.is_animated}`\n"
-                else:
-                    file_id += "**Animated Sticker**: `False`\n"
+                file_id += f"المجموعة: `{rep.sticker.set_name}`\n"
+                file_id += f"الإيموجي: `{rep.sticker.emoji}`\n"
+                file_id += f"متحرك: `{rep.sticker.is_animated}`"
             else:
-                file_id += "**Sticker Set**: __None__\n"
-                file_id += "**Sticker Emoji**: __None__"
+                file_id += "المجموعة: غير متوفرة\nالإيموجي: غير متوفر"
 
         elif rep.video:
-            file_id = f"**File ID**: `{rep.video.file_id}`\n"
-            file_id += "**File Type**: `video`"
+            file_id = f"File ID: `{rep.video.file_id}`\nالنوع: Video"
 
         elif rep.animation:
-            file_id = f"**File ID**: `{rep.animation.file_id}`\n"
-            file_id += "**File Type**: `GIF`"
+            file_id = f"File ID: `{rep.animation.file_id}`\nالنوع: GIF"
 
         elif rep.voice:
-            file_id = f"**File ID**: `{rep.voice.file_id}`\n"
-            file_id += "**File Type**: `Voice Note`"
+            file_id = f"File ID: `{rep.voice.file_id}`\nالنوع: Voice Note"
 
         elif rep.video_note:
-            file_id = f"**File ID**: `{rep.animation.file_id}`\n"
-            file_id += "**File Type**: `Video Note`"
+            file_id = f"File ID: `{rep.video_note.file_id}`\nالنوع: Video Note"
 
         elif rep.location:
-            file_id = "**Location**:\n"
-            file_id += f"**longitude**: `{rep.location.longitude}`\n"
-            file_id += f"**latitude**: `{rep.location.latitude}`"
+            file_id = "الموقع:\n"
+            file_id += f"خط الطول: `{rep.location.longitude}`\n"
+            file_id += f"خط العرض: `{rep.location.latitude}`"
 
         elif rep.venue:
-            file_id = "**Location**:\n"
-            file_id += f"**longitude**: `{rep.venue.location.longitude}`\n"
-            file_id += f"**latitude**: `{rep.venue.location.latitude}`\n\n"
-            file_id += "**Address**:\n"
-            file_id += f"**title**: `{rep.venue.title}`\n"
-            file_id += f"**detailed**: `{rep.venue.address}`\n\n"
+            file_id = "الموقع:\n"
+            file_id += f"خط الطول: `{rep.venue.location.longitude}`\n"
+            file_id += f"خط العرض: `{rep.venue.location.latitude}`\n\n"
+            file_id += "العنوان:\n"
+            file_id += f"الاسم: `{rep.venue.title}`\n"
+            file_id += f"التفاصيل: `{rep.venue.address}`"
 
         elif rep.from_user:
             user_id = rep.from_user.id
 
     if user_id:
-        if rep.forward_from:
-            user_detail = (
-                f"**Forwarded User ID**: `{message.reply_to_message.forward_from.id}`\n"
-            )
-        else:
-            user_detail = f"**User ID**: `{message.reply_to_message.from_user.id}`\n"
-        user_detail += f"**Message ID**: `{message.reply_to_message.id}`"
+        user_detail = (
+            f"User ID: `{rep.from_user.id}`\nMessage ID: `{rep.id}`"
+        )
         await message.edit(user_detail)
+
     elif file_id:
-        if rep.forward_from:
-            user_detail = (
-                f"**Forwarded User ID**: `{message.reply_to_message.forward_from.id}`\n"
-            )
-        else:
-            user_detail = f"**User ID**: `{message.reply_to_message.from_user.id}`\n"
-        user_detail += f"**Message ID**: `{message.reply_to_message.id}`\n\n"
-        user_detail += file_id
-        await message.edit(user_detail)
+        detail = f"User ID: `{rep.from_user.id}`\nMessage ID: `{rep.id}`\n\n{file_id}"
+        await message.edit(detail)
 
     else:
-        await message.edit(f"**Chat ID**: `{message.chat.id}`")
+        await message.edit(f"Chat ID: `{message.chat.id}`")
 
 
-@UserBot.on_message(filters.command("restart", ".") & filters.me)
+@UserBot.on_message(filters.command(["restart", "اعادة"], ".") & filters.me)
 async def restart(bot: UserBot, message: Message):
-    await message.edit(f"Restarting {UserBot.__class__.__name__}.")
-    await bot.send_message(
-        "me", f"#userbot_restart, {message.chat.id}, {message.id}"
-    )
+    await message.edit("جارٍ إعادة تشغيل البوت...")
+    await bot.send_message("me", f"#userbot_restart, {message.chat.id}, {message.id}")
 
     if "p" in message.text and "g" in message.text:
         asyncio.get_event_loop().create_task(UserBot.restart(git_update=True, pip=True))
@@ -144,27 +121,24 @@ async def restart(bot: UserBot, message: Message):
         asyncio.get_event_loop().create_task(UserBot.restart())
 
 
-# Command help section
+# قسم المساعدة - عربي
 add_command_help(
-    "start",
+    "الأساسية",
     [
-        [".alive", "Check if the bot is alive or not."],
-        [".repo", "Display the repo of this userbot."],
-        [".creator", "Show the creator of this userbot."],
-        [".id", "Send id of what you replied to."],
-        [".up `or` .uptime", "Check bot's current uptime."],
+        [".alive / .حي", "عرض حالة البوت الحالية ومعلومات النظام."],
+        [".repo / .المصدر", "عرض رابط المستودع الخاص بالبوت."],
+        [".creator / .المطور", "عرض معلومات مطور البوت."],
+        [".id / .ايدي", "عرض معرف الرسالة أو الملف أو المستخدم."],
+        [".uptime / .up / .المدة", "عرض مدة تشغيل البوت الحالية."],
     ],
 )
 
 add_command_help(
-    "restart",
+    "إعادة التشغيل",
     [
-        [".restart", "You are retarded if you do not know what this does."],
-        [".restart g", "Pull latest changes from git repo and restarts."],
-        [".restart p", "Installs pip requirements restarts."],
-        [
-            ".restart gp",
-            "Pull latest changes from git repo, install pip requirements and restarts.",
-        ],
+        [".restart / .اعادة", "إعادة تشغيل البوت."],
+        [".restart g", "تحديث الكود من Git ثم إعادة التشغيل."],
+        [".restart p", "تحديث الحزم (pip) ثم إعادة التشغيل."],
+        [".restart gp", "تحديث Git و pip ثم إعادة التشغيل."],
     ],
 )
