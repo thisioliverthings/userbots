@@ -17,9 +17,7 @@ GROUPS = {}
 
 
 def subtract_time(start, end):
-    """Get humanized time"""
-    subtracted = humanize.naturaltime(start - end)
-    return str(subtracted)
+    return str(humanize.naturaltime(start - end))
 
 
 @UserBot.on_message(
@@ -28,16 +26,14 @@ def subtract_time(start, end):
 async def collect_afk_messages(bot: UserBot, message: Message):
     if AFK:
         last_seen = subtract_time(datetime.now(), AFK_TIME)
-        is_group = True if message.chat.type in ["supergroup", "group"] else False
+        is_group = message.chat.type in ["supergroup", "group"]
         CHAT_TYPE = GROUPS if is_group else USERS
 
         if GetChatID(message) not in CHAT_TYPE:
             text = (
-                f"`Beep boop. This is an automated message.\n"
-                f"I am not available right now.\n"
-                f"Last seen: {last_seen}\n"
-                f"Reason: ```{AFK_REASON.upper()}```\n"
-                f"See you after I'm done doing whatever I'm doing.`"
+                f"أنا حالياً غير متوفر.\n"
+                f"- الغياب منذ: {last_seen}\n"
+                f"- السبب: {AFK_REASON if AFK_REASON else 'غير محدد'}"
             )
             await bot.send_message(
                 chat_id=GetChatID(message),
@@ -46,72 +42,62 @@ async def collect_afk_messages(bot: UserBot, message: Message):
             )
             CHAT_TYPE[GetChatID(message)] = 1
             return
-        elif GetChatID(message) in CHAT_TYPE:
-            if CHAT_TYPE[GetChatID(message)] == 50:
-                text = (
-                    f"`This is an automated message\n"
-                    f"Last seen: {last_seen}\n"
-                    f"This is the 10th time I've told you I'm AFK right now..\n"
-                    f"I'll get to you when I get to you.\n"
-                    f"No more auto messages for you`"
-                )
-                await bot.send_message(
-                    chat_id=GetChatID(message),
-                    text=text,
-                    reply_to_message_id=ReplyCheck(message),
-                )
-            elif CHAT_TYPE[GetChatID(message)] > 50:
-                return
-            elif CHAT_TYPE[GetChatID(message)] % 5 == 0:
-                text = (
-                    f"`Hey I'm still not back yet.\n"
-                    f"Last seen: {last_seen}\n"
-                    f"Still busy: ```{AFK_REASON.upper()}```\n"
-                    f"Try pinging a bit later.`"
-                )
-                await bot.send_message(
-                    chat_id=GetChatID(message),
-                    text=text,
-                    reply_to_message_id=ReplyCheck(message),
-                )
+        elif CHAT_TYPE[GetChatID(message)] == 50:
+            text = (
+                f"ذكرتني أكثر من 50 مرة.\n"
+                f"آخر ظهور: {last_seen}\n"
+                f"الرجاء الانتظار حتى أعود."
+            )
+            await bot.send_message(
+                chat_id=GetChatID(message),
+                text=text,
+                reply_to_message_id=ReplyCheck(message),
+            )
+        elif CHAT_TYPE[GetChatID(message)] % 5 == 0:
+            text = (
+                f"ما زلت غير متوفر.\n"
+                f"- آخر ظهور: {last_seen}\n"
+                f"- مشغول بسبب: {AFK_REASON if AFK_REASON else 'غير محدد'}"
+            )
+            await bot.send_message(
+                chat_id=GetChatID(message),
+                text=text,
+                reply_to_message_id=ReplyCheck(message),
+            )
 
         CHAT_TYPE[GetChatID(message)] += 1
 
 
-@UserBot.on_message(filters.command("afk", ".") & filters.me, group=3)
+@UserBot.on_message(filters.command(["afk", "بعيد"], ".") & filters.me, group=3)
 async def afk_set(bot: UserBot, message: Message):
     global AFK_REASON, AFK, AFK_TIME
 
-    cmd = message.command
-    afk_text = ""
-
-    if len(cmd) > 1:
-        afk_text = " ".join(cmd[1:])
-
-    if isinstance(afk_text, str):
-        AFK_REASON = afk_text
-
+    reason = " ".join(message.command[1:]) if len(message.command) > 1 else ""
+    AFK_REASON = reason
     AFK = True
     AFK_TIME = datetime.now()
 
     await message.delete()
 
 
-@UserBot.on_message(filters.command("afk", "!") & filters.me, group=3)
+@UserBot.on_message(filters.command(["afk", "رجعت"], "!") & filters.me, group=3)
 async def afk_unset(bot: UserBot, message: Message):
     global AFK, AFK_TIME, AFK_REASON, USERS, GROUPS
 
     if AFK:
         last_seen = subtract_time(datetime.now(), AFK_TIME).replace("ago", "").strip()
+        total_msgs = sum(USERS.values()) + sum(GROUPS.values())
+        total_chats = len(USERS) + len(GROUPS)
+
         await message.edit(
-            f"`While you were away (for {last_seen}), you received {sum(USERS.values()) + sum(GROUPS.values())} "
-            f"messages from {len(USERS) + len(GROUPS)} chats`"
+            f"خلال غيابك ({last_seen})، استلمت {total_msgs} رسالة من {total_chats} محادثة."
         )
+
         AFK = False
         AFK_TIME = ""
         AFK_REASON = ""
-        USERS = {}
-        GROUPS = {}
+        USERS.clear()
+        GROUPS.clear()
         await asyncio.sleep(5)
 
     await message.delete()
@@ -123,23 +109,27 @@ async def auto_afk_unset(bot: UserBot, message: Message):
 
     if AFK:
         last_seen = subtract_time(datetime.now(), AFK_TIME).replace("ago", "").strip()
+        total_msgs = sum(USERS.values()) + sum(GROUPS.values())
+        total_chats = len(USERS) + len(GROUPS)
+
         reply = await message.reply(
-            f"`While you were away (for {last_seen}), you received {sum(USERS.values()) + sum(GROUPS.values())} "
-            f"messages from {len(USERS) + len(GROUPS)} chats`"
+            f"خلال غيابك ({last_seen})، استلمت {total_msgs} رسالة من {total_chats} محادثة."
         )
+
         AFK = False
         AFK_TIME = ""
         AFK_REASON = ""
-        USERS = {}
-        GROUPS = {}
+        USERS.clear()
+        GROUPS.clear()
         await asyncio.sleep(5)
         await reply.delete()
 
 
+# قسم المساعدة - عربي
 add_command_help(
-    "afk",
+    "وضع الغياب",
     [
-        [".afk", "Activates AFK mode with reason as anything after .afk\nUsage: ```.afk <reason>```"],
-        ["!afk", "Deactivates AFK mode."],
+        [".afk <السبب> / .بعيد", "تفعيل وضع الغياب مع سبب اختياري."],
+        ["!afk / !رجعت", "إلغاء وضع الغياب والعودة للحالة النشطة."],
     ],
 )
